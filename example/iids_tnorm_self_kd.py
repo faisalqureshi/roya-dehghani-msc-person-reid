@@ -1,5 +1,6 @@
 from __future__ import print_function, absolute_import
 import argparse
+import os
 import os.path as osp
 import shutil
 
@@ -12,7 +13,7 @@ from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 
 #add the path of your directory
-sys.path.append('/home/roya/IIDS')
+sys.path.append( os.path.abspath(os.path.join(os.getcwd(), '../')) )
 
 from reid.loss import TripletLoss, SoftEntropy, SoftTripletLoss
 from reid.loss.entropy_regularization import SoftEntropy
