@@ -1,0 +1,23 @@
+﻿Results:
+Original Model without any changes:            
+
+
+     
+ subset   | ids | images
+  ---------------------------
+  Train     35     534
+  val              15    259
+  trainval  50     793
+  Query    750   3368
+  gallery   751  15913
+
+
+Mean AP: 7.6%
+
+
+  top-1              24.4%
+  top-5              42.5%
+  top-10             50.4%
+
+
+Tnorm: Rank1: 0.23545130641330167 mAP: 0.07318187337567159           Normal: Rank1: 0.24376484560570072 mAP: 0.07579761900673529
