@@ -10,6 +10,7 @@ import os
 import numpy as np
 import sys
 import torch
+import itertools
 from torch import nn
 from torch.backends import cudnn
 from torch.utils.data import DataLoader
@@ -18,8 +19,10 @@ from torch.optim import lr_scheduler
 
 sys.path.append(os.getcwd())
 
+
 from reid.loss import TripletLoss, SoftEntropy, SoftTripletLoss
 from reid.loss.entropy_regularization import SoftEntropy
+
 from reid import datasets
 from reid import models
 from reid.trainers import IntraCameraSelfKDTnormTrainer
@@ -36,9 +39,6 @@ from reid.utils.data.sampler import RandomIdentitySampler
 import debugpy
 
 
-#debugpy.listen(5678)
-#print("debug")
-#debugpy.wait_for_client()
 
 
 
@@ -129,6 +129,14 @@ def get_mix_rate(mix_rate, epoch, num_epoch, power=0.6):
     #epoch_stage1=3
     #epoch_stage2=2
 
+def show_batch_dataloader(dataloader):
+    #returns a tuple of (image_pixels, filenames, person_ids, camera_ids).
+    for batch_images in dataloader:
+        print("batch_images",batch_images)
+        exit(0)
+    
+    
+    
 def main(args):
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -149,13 +157,20 @@ def main(args):
                  )
     camera_number = {"market1501": 6, "dukemtmc": 8, "msmt17": 15, "viper": 2}
     
+    show_batch_dataloader(train_loader)
+ 
+    
+    
+    
+    
     # Create model
     #ft_net_inter_Tnorm=backbone+classifier
     model = models.create("ft_net_inter_TNorm",
                           domain_number=camera_number[args.dataset],
                           num_classes=num_classes,
                           stride=args.stride,
-                          init_weight=args.init_weight)
+                          init_weight=args.init_weight)#the output of the model is feature vector
+    
     # .....(classifier): Sequential(
     #(0): BatchNorm1d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
     #(1): Linear(in_features=2048, out_features=751, bias=False)
@@ -236,7 +251,7 @@ def main(args):
                                                       args.eph_stage1,
                                                       args.linkage)
     
-        
+        #len of cluster result for first time is 6
         cluster_datasets = [
             datasets.create("cluster", osp.join(args.data_dir, args.dataset),
                             cluster_result[cam_id], cam_id)
@@ -244,17 +259,40 @@ def main(args):
         ]
         
         cluster_dataloaders = [
-            DataLoader(Preprocessor(dataset.train_set,
+            DataLoader(
+                
+                Preprocessor(dataset.train_set,
                                     root=dataset.images_dir,
                                     transform=train_transformer,
                                     mutual=True),
+                       
                        batch_size=args.batch_size,
                        num_workers=args.workers,
                        shuffle=True,
                        pin_memory=False,
                        drop_last=True) for dataset in cluster_datasets
         ]
+        #len(cluster_dataloaders)=6
+        # Get the first DataLoader object from the cluster_dataloaders list
+        # data_loader = cluster_dataloaders[0]
+        print("roya1")
+        # print(data_loader)
+        # Iterate over the batches in the data loader and print out the contents of each batch
+        # step = 0
+        # batch = next(itertools.islice(data_loader, step, None))
+        # print(batch)
+        # print(len(cluster_dataloaders[1]))
+        for i in cluster_dataloaders:
+            
+            print(i)
+            # print(f"Batch {i+1}:")
+            # print("Inputs:", inputs)
+            # print("Targets:", targets)
+            # exit(0)
+    
+        print("after1")
         param_dict = model.model.state_dict()
+        
         model = models.create(
             "ft_net_intra_TNorm",
             num_classes=[dt.classes_num for dt in cluster_datasets],
@@ -450,7 +488,8 @@ if __name__ == '__main__':
                         help="mu in Eq (5)")
     parser.add_argument('--decay_factor', type=float, default=0.6)
 #default=8
-    parser.add_argument('-b', '--batch-size', type=int, default=8)
+    parser.add_argument('-b', '--batch-size', type=int, default=2 )#default was 8
+    
 #default=64
     parser.add_argument('-b2', '--batch-size-stage2', type=int, default=32)
     parser.add_argument('--instances', default=4)
@@ -500,8 +539,7 @@ if __name__ == '__main__':
     parser.add_argument('--data-dir',
                         type=str,
                         metavar='PATH',
-                        #default=osp.join(working_dir, 'data')
-                        )
+                        default=osp.join(working_dir, 'data'))
     parser.add_argument('--logs-dir',
                         type=str,
                         metavar='PATH',
