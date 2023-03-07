@@ -157,7 +157,7 @@ def main(args):
                  )
     camera_number = {"market1501": 6, "dukemtmc": 8, "msmt17": 15, "viper": 2}
     
-    show_batch_dataloader(train_loader)
+    
  
     
     
@@ -272,33 +272,30 @@ def main(args):
                        pin_memory=False,
                        drop_last=True) for dataset in cluster_datasets
         ]
-        #len(cluster_dataloaders)=6
-        # Get the first DataLoader object from the cluster_dataloaders list
-        # data_loader = cluster_dataloaders[0]
-        print("roya1")
-        # print(data_loader)
-        # Iterate over the batches in the data loader and print out the contents of each batch
-        # step = 0
-        # batch = next(itertools.islice(data_loader, step, None))
-        # print(batch)
-        # print(len(cluster_dataloaders[1]))
-        for i in cluster_dataloaders:
-            
-            print(i)
-            # print(f"Batch {i+1}:")
-            # print("Inputs:", inputs)
-            # print("Targets:", targets)
-            # exit(0)
+        
+        #to show one batch of one cluster_dataloaders
+        # for one in  cluster_dataloaders:
+        #     for batch in one:
+        #         print("batch",batch)
+        #         exit(0)
     
-        print("after1")
+     
+     
+     
         param_dict = model.model.state_dict()
+        
+        # model = models.create(
+        #     "ft_net_intra_TNorm",
+        #     num_classes=[dt.classes_num for dt in cluster_datasets],
+        #     stride=args.stride,
+        #     init_weight=args.init_weight)
+        
         
         model = models.create(
             "ft_net_intra_TNorm",
             num_classes=[dt.classes_num for dt in cluster_datasets],
             stride=args.stride,
             init_weight=args.init_weight)
-       
         
        
         model_param_dict = model.model.state_dict()
@@ -346,6 +343,8 @@ def main(args):
                                                             args.linkage,
                                                             mix_rate,
                                                             use_cpu=args.use_cpu)
+        #len(cluster_result)=41 for first time meaning there are 41 images with their labels in the cluster_result but we have 18 different labels
+        #OrderedDict([('00001368_00_0000.jpg', 0), ('00001368_01_0000.jpg', 0), ('00001162_01_0000.jpg', 1), ('00001162_05_0002.jpg', 1), ('00001162_01_0006.jpg', 2), ('00001176_03_0000.jpg', 2), ('00001176_05_0000.jpg', 2), ('00001162_02_0004.jpg', 3), ('00001292_00_0000.jpg', 3), ('00000738_00_0001.jpg', 4), ('00001350_02_0000.jpg', 4), ('00000738_04_0000.jpg', 5), ('00000718_05_0001.jpg', 5), ('00001017_00_0001.jpg', 6), ('00001017_02_0003.jpg', 6), ('00001017_02_0002.jpg', 7), ('00001017_03_0002.jpg', 7), ('00000718_00_0001.jpg', 8), ('00001176_04_0002.jpg', 8), ('00000718_01_0001.jpg', 9), ('00001176_03_0002.jpg', 9), ('00000718_02_0002.jpg', 10), ('00000172_01_0001.jpg', 10), ('00001292_01_0000.jpg', 11), ('00001350_03_0000.jpg', 11), ('00000810_00_0003.jpg', 12), ('00000810_03_0009.jpg', 12), ('00000810_02_0003.jpg', 13), ('00000810_04_0004.jpg', 13), ('00000810_02_0010.jpg', 14), ('00000810_03_0001.jpg', 14), ('00000810_03_0007.jpg', 15), ('00000810_05_0002.jpg', 15), ('00001176_00_0000.jpg', 16), ('00001176_02_0001.jpg', 16), ('00001373_01_0000.jpg', 16), ('00001176_00_0001.jpg', 17), ('00001176_02_0000.jpg', 17), ('00001373_01_0002.jpg', 17), ('00001176_03_0001.jpg', 18), ('00001176_04_0000.jpg', 18)])
 
         cluster_dataset = datasets.create(
             "cluster", osp.join(args.data_dir, args.dataset), cluster_result,
@@ -488,7 +487,7 @@ if __name__ == '__main__':
                         help="mu in Eq (5)")
     parser.add_argument('--decay_factor', type=float, default=0.6)
 #default=8
-    parser.add_argument('-b', '--batch-size', type=int, default=2 )#default was 8
+    parser.add_argument('-b', '--batch-size', type=int, default=8 )#default is 8
     
 #default=64
     parser.add_argument('-b2', '--batch-size-stage2', type=int, default=32)
