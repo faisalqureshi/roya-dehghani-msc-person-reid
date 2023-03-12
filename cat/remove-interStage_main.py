@@ -320,7 +320,7 @@ def main(args):
         #num_classes are a list containing the number of different labels/classes in each dataset
         #the number of noerons in the last layer in classifiers is the same as number of classes
         model = models.create(
-            "ft_net_intra_TNorm",
+            "ft_net_intra_resnet50",
             num_classes=[dt.classes_num for dt in cluster_datasets],
             stride=args.stride,
             init_weight=args.init_weight)
@@ -380,19 +380,31 @@ def main(args):
                                                 warm_up_epoch=args.warm_up,
                                                 multi_task_weight=args.multi_task_weight,)
         
-        # Start training
-        #epochs_stage1=3
-        #we have 6 cluster_dataloaders, so the first for is run 6 times
+      
+#this part of code is written in the train method of IntraCameraSelfKDTnormTrainer
+#my understanding is that when we set batch to 4, the first for is ran just 1 time
+#and the second for is ran 6 times beacsue we have 6 cluster_dataloaders
+#and from each dataloader, we pull one batch and use them together to run classifier, and the reason why fromeach dataloder, just one batch is pulled is that in dataloader 4, we have 
+#just one batch when batch is 4
+
+
+    #     print(len(cluster_dataloaders))
+    #     print(len(list(zip(*cluster_dataloaders))))
+    #    # we have 6 cluster_dataloaders, so the first for is run 6 times
+        # counter =0
         # for i, inputs in enumerate(zip(*cluster_dataloaders)):
+        #     print(i)
+        #     counter = counter + 1
         #     for domain, domain_input in enumerate(inputs):
         #             imgs1, imgs2, _, pids, _ = domain_input
         #             imgs1 = imgs1.cuda()
         #             imgs2 = imgs2.cuda()
         #             targets = pids.cuda()#use pseudo labels
-        #             print(domain)
+        #             print("domain",domain)
+        #             print(len(pids))
+    #     exit(0)
         
-        
-        
+    
         
         
         for epoch in range(0, args.epochs_stage1):
@@ -486,7 +498,7 @@ if __name__ == '__main__':
                         help="mu in Eq (5)")
     parser.add_argument('--decay_factor', type=float, default=0.6)
 #default=8
-    parser.add_argument('-b', '--batch-size', type=int, default=2 )#default is 8
+    parser.add_argument('-b', '--batch-size', type=int, default=4 )#default is 8
     
 #default=64
     parser.add_argument('-b2', '--batch-size-stage2', type=int, default=32)
