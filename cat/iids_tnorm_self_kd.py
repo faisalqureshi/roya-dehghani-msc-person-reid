@@ -284,25 +284,23 @@ def main(args):
      
         param_dict = model.model.state_dict()
         
-        # model = models.create(
-        #     "ft_net_intra_TNorm",
-        #     num_classes=[dt.classes_num for dt in cluster_datasets],
-        #     stride=args.stride,
-        #     init_weight=args.init_weight)
-        
-        
         model = models.create(
             "ft_net_intra_TNorm",
             num_classes=[dt.classes_num for dt in cluster_datasets],
             stride=args.stride,
             init_weight=args.init_weight)
         
-       
+        
+      
+        
+       #update parameters of the new model with the previous model
+       #replace the parameters of model_param_dict with param_dict
         model_param_dict = model.model.state_dict()
         for k, v in model_param_dict.items():
             if k in param_dict.keys():
                 model_param_dict[k] = param_dict[k]
         model.model.load_state_dict(model_param_dict)
+        
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         model = model.to(device)
         #model = model.cuda()

@@ -72,6 +72,7 @@ class Trainer(BaseTrainer):
         outputs = self.model(inputs)
         if isinstance(self.criterion, torch.nn.CrossEntropyLoss):
             loss = self.criterion(outputs, targets)
+            #The accuracy function returns a tuple of precision and recall
             prec, = accuracy(outputs.data, targets.data)
             prec = prec[0]
         elif isinstance(self.criterion, TripletLoss):
@@ -151,13 +152,16 @@ class IntraCameraTrainer(BaseTrainer):
                           precisions.val, precisions.avg))
 
 
+#my finding is that this trainer is a A Siamese network model to compare two input
+# data points and determine how similar or dissimilar they are
+#it consists of two identical subnetworks, each with its own set of weights and biases, that share the same architecture and parameters
 class IntraCameraSelfKDTnormTrainer(object):
     def __init__(
         self,
         model_1,
         entropy_criterion,
         soft_entropy_criterion,
-        warm_up_epoch=-1,
+        warm_up_epoch=-1,# a warm-up epoch parameter (warm_up_epoch) that specifies the number of epochs during which only the cross-entropy loss is used for training, before introducing the soft target loss.
         multi_task_weight=1.0
     ):
         super(IntraCameraSelfKDTnormTrainer, self).__init__()
@@ -168,16 +172,24 @@ class IntraCameraSelfKDTnormTrainer(object):
         self.soft_entropy_criterion = soft_entropy_criterion
         self.warm_up_epoch = warm_up_epoch
         self.multi_task_weight = multi_task_weight
-
+    #The goal of the trainer is to minimize the cross-entropy loss between the predicted outputs of the model and the true targets.
+    #The "_forward" function takes in input data, targets, and a domain index, and calculates the cross-entropy loss, the precision 
+    # (accuracy), and the soft cross-entropy loss between the predicted outputs of the model and the true targets
     def _forward(self, inputs1, inputs2, targets, i):
         convert = np.random.rand() > 0.5
         outputs1 = self.model_1(inputs1, i)
-        outputs2 = self.model_1(inputs2, i, convert=convert)
+        # outputs2 = self.model_1(inputs2, i, convert=convert)
+        outputs2 = self.model_1(inputs2, i)
 
         loss_ce1 = self.entropy_criterion(outputs1, targets)
         prec1, = accuracy(outputs1.data, targets.data)
         prec1 = prec1[0]
-
+        #soft_loss1 is the soft cross-entropy loss between the outputs2 and outputs1 divided by the temperature squared.
+        #The soft cross-entropy loss is calculated between the outputs of the model on two randomly augmented versions of the same input.
+        print("outputs2 / self.T",outputs2 / self.T)
+        print("******")
+        print(" (outputs1 / self.T).detach()", (outputs1 / self.T).detach())
+        exit(0)
         soft_loss1 = self.soft_entropy_criterion(outputs2 / self.T, (outputs1 / self.T).detach()) * self.T * self.T
 
         return loss_ce1, prec1, soft_loss1
@@ -204,14 +216,14 @@ class IntraCameraSelfKDTnormTrainer(object):
 
         for i, inputs in enumerate(zip(*data_loader)):
             data_time.update(time.time() - end)
+            #we have 6 data_loader and domain is the cam_num/domain and domain_input is imgs,copied_imgs,fnames,pids,cam_ids
             for domain, domain_input in enumerate(inputs):
                 imgs1, imgs2, _, pids, _ = domain_input
                 imgs1 = imgs1.cuda()
                 imgs2 = imgs2.cuda()
-                targets = pids.cuda()
+                targets = pids.cuda()#use pseudo labels
 
-                loss1, prec1, soft_loss1 = self._forward(
-                    imgs1, imgs2, targets, domain)
+                loss1, prec1, soft_loss1 = self._forward(imgs1, imgs2, targets, domain)
                 if domain == 0:
                     loss1_sum = loss1
                     soft_loss1_sum = soft_loss1
@@ -222,12 +234,12 @@ class IntraCameraSelfKDTnormTrainer(object):
                 losses_ce1.update(loss1.item(), targets.size(0))
                 precisions_1.update(prec1, targets.size(0))
                 losses_soft1.update(soft_loss1.item(), targets.size(0))
-            
+            #a multi-task weight parameter used for scaling the soft cross-entropy loss
             final_loss = loss1_sum + soft_loss1_sum * self.multi_task_weight
-            
+            # If the current epoch is less than the warm-up epoch, the final loss is multiplied by a factor of 0.1
             if cluster_epoch < self.warm_up_epoch:
                 final_loss = final_loss * 0.1
-
+            # Finally, the gradients are zeroed, the backward pass is calculated, and the optimizer is updated.
             optimizer.zero_grad()
             final_loss.backward()
             optimizer.step()
@@ -368,7 +380,8 @@ class InterCameraSelfKDTNormTrainer(object):
     def _forward(self, inputs1, inputs2, targets):
         convert = np.random.rand() > 0.5
         prob1, distance1 = self.model_1(inputs1)
-        prob2, distance2 = self.model_1(inputs2, convert=convert)
+        # prob2, distance2 = self.model_1(inputs2, convert=convert)
+        prob2, distance2 = self.model_1(inputs2)
 
         loss_ce1 = self.entropy_criterion(prob1, targets)
         prec1, = accuracy(prob1.data, targets.data)

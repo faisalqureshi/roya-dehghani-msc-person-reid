@@ -5,7 +5,7 @@ from collections import OrderedDict
 import torch
 import torch.nn.functional as F
 from .evaluation_metrics import cmc, mean_ap
-from .feature_extraction import extract_cnn_feature, extract_cnn_feature_specific, extract_cnn_feature_with_tnorm
+from .feature_extraction import extract_cnn_feature, extract_cnn_feature_specific, extract_cnn_feature_with_tnorm,extract_cnn_feature_without_tnorm
 from .utils.meters import AverageMeter
 
 import numpy as np
@@ -64,6 +64,47 @@ def extract_features_tnorm(model, data_loader, print_freq=1, metric=None, camera
         with torch.no_grad():
             for i in range(camera_number):
                 t = extract_cnn_feature_with_tnorm(model,
+                                                   imgs,
+                                                   camid,
+                                                   i,
+                                                   norm=False)
+                if i == 0:
+                    tmp = t
+                else:
+                    tmp = tmp + t
+            outputs = F.normalize(tmp, p=2, dim=1)
+        for fname, output, pid in zip(fnames, outputs, pids):
+            features[fname] = output
+            labels[fname] = pid
+
+        batch_time.update(time.time() - end)
+        end = time.time()
+
+        if (i + 1) % print_freq == 0:
+            print('Extract Features: [{}/{}]\t'
+                  'Time {:.3f} ({:.3f})\t'
+                  'Data {:.3f} ({:.3f})\t'
+                  .format(i + 1, len(data_loader),
+                          batch_time.val, batch_time.avg,
+                          data_time.val, data_time.avg))
+
+    return features, labels
+
+
+def extract_features_without_tnorm(model, data_loader, print_freq=1, metric=None, camera_number=1):
+    model.eval()
+    batch_time = AverageMeter()
+    data_time = AverageMeter()
+
+    features = OrderedDict()
+    labels = OrderedDict()
+
+    end = time.time()
+    for i, (imgs, fnames, pids, camid) in enumerate(data_loader):
+        data_time.update(time.time() - end)
+        with torch.no_grad():
+            for i in range(camera_number):
+                t = extract_cnn_feature_without_tnorm(model,
                                                    imgs,
                                                    camid,
                                                    i,
@@ -210,7 +251,9 @@ class Evaluator(object):
         return evaluate_all(distmat, query=query, gallery=gallery, return_mAP=return_mAP)
 
     def evaluate_tnorm(self, data_loader, query, gallery, metric=None, return_mAP=False, camera_number=1):
-        features, _ = extract_features_tnorm(self.model, data_loader, camera_number=camera_number)
+        #this function is in this file, not in cnn.py
+        #features, _ = extract_features_tnorm(self.model, data_loader, camera_number=camera_number)
+        features, _ = extract_features_without_tnorm(self.model, data_loader, camera_number=camera_number)
         distmat = pairwise_distance(features, query, gallery, metric=metric, use_cpu=self.use_cpu)
         return evaluate_all(distmat, query=query, gallery=gallery, return_mAP=return_mAP)
 

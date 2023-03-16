@@ -1,2 +1,2 @@
 export PYTHONPATH=$PYTHONPATH:./
-python ../example/iids_tnorm_self_kd.py --dataset market1501 --evaluate --checkpoint ../pretrained_weights/market.pth.tar
+python iids_tnorm_self_kd.py      --data-dir   ../iids/example/data   --dataset market1501 --checkpoint pretrained_weights/market.pth.tar

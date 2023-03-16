@@ -14,7 +14,7 @@ def re_ranking(original_dist, k1=20, k2=6, lambda_value=0.3):
     V = np.zeros_like(original_dist).astype(np.float16)
     initial_rank = np.argsort(original_dist).astype(np.int32)  ## default axis=-1.  
 
-    print('Starting re_ranking...')
+    #print('Starting re_ranking...')
     for i in range(all_num):
         # k-reciprocal neighbors
         forward_k_neigh_index = initial_rank[i,:k1+1]  ## k1+1 because self always ranks first. forward_k_neigh_index.shape=[k1+1].  forward_k_neigh_index[0] == i.

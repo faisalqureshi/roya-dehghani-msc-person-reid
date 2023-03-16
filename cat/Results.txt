@@ -6,9 +6,9 @@ Original Model without any changes:
  subset   | ids | images
   ---------------------------
   Train     35     534
-  val              15    259
+  val       15     259
   trainval  50     793
-  Query    750   3368
+  Query     750   3368
   gallery   751  15913
 
 
@@ -21,3 +21,88 @@ Mean AP: 7.6%
 
 
 Tnorm: Rank1: 0.23545130641330167 mAP: 0.07318187337567159           Normal: Rank1: 0.24376484560570072 mAP: 0.07579761900673529
+
+
+original model on smaller datasets:
+ subset   | # ids | # images
+  ---------------------------
+  train    |    11 |      204
+  val      |     4 |       38
+  trainval |    15 |      242
+  query    |     2 |       11
+  gallery  |     4 |      133
+
+Mean AP: 35.3%
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:00<00:00, 25504.34it/s]
+CMC Scores  market1501
+  top-1          54.5%
+  top-5          90.9%
+  top-10        100.0%
+Tnorm: Rank1: 0.5454545454545454 mAP: 0.35317385415070063        Normal: Rank1: 0.5454545454545454 mAP: 0.3531898063205606
+
+
+EXperiment2: remove stage2/inter stage and just train the model using intra trainer
+ subset   | # ids | # images
+  ---------------------------
+  train    |    11 |      204
+  val      |     4 |       38
+  trainval |    15 |      242
+  query    |     2 |       11
+  gallery  |     4 |      133
+
+  Mean AP: 52.6%
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:00<00:00, 37147.62it/s]
+CMC Scores  market1501
+  top-1          81.8%
+  top-5          90.9%
+  top-10        100.0%
+Tnorm: Rank1: 0.8181818181818182 mAP: 0.526328749905558  Normal: Rank1: 0.8181818181818182 mAP: 0.5263450162677122
+
+
+EXperiment3:
+remove stage2 and use the same oroginal model
+Market1501 dataset loaded
+  subset   | # ids | # images
+  ---------------------------
+  train    |     5 |       79
+  val      |     2 |       41
+  trainval |     7 |      120s
+  query    |   200 |     3368
+  gallery  |   751 |    15913
+
+  Mean AP: 3.5%
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3368/3368 [00:00<00:00, 5110.50it/s]
+CMC Scores  market1501
+  top-1          13.5%
+  top-5          27.3%
+  top-10         34.1%
+Tnorm: Rank1: 0.13450118764845606 mAP: 0.034525429431195555      Normal: Rank1: 0.13450118764845606 mAP: 0.034532473138349756
+
+4)Files already downloaded and verified, original model with both stages on smaller dataset
+Market1501 dataset loaded
+  subset   | # ids | # images
+  ---------------------------
+  train    |    11 |      204
+  val      |     4 |       38
+  trainval |    15 |      242
+  query    |   200 |     3368
+  gallery  |   751 |    15913
+Mean AP: 0.8%
+100%|████████████████████████████████████████████████████████████████████████████████| 3368/3368 [00:00<00:00, 5180.73it/s]
+CMC Scores  market1501
+  top-1           2.3%
+  top-5           6.2%
+  top-10         10.5%
+Tnorm: Rank1: 0.02315914489311164 mAP: 0.007618761619773975      Normal: Rank1: 0.02315914489311164 mAP: 0.0076141562360616
+
+
+
+setting                                           Market1501
+                                                  mAP/Rank1
+--------------------------------------------------------------------------------------
+pretrain                                       |
+stage1                                         |
+stage2                                         |
+stage1+stage2                                  |   
+stage1+stage2+AIBN                             |
+stage1+stage2+Tnormstage1+stage2+AIBN+Tnorm    |

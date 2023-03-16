@@ -3,6 +3,8 @@ import torch.nn as nn
 from torch.nn import init
 from torchvision import models
 from .backbones.resnet import AIBNResNet, TNormResNet
+from .backbones.Resnet50_roya import ResNet
+
 
 
 def weights_init_kaiming(m):
@@ -20,6 +22,9 @@ def weights_init_kaiming(m):
         init.constant_(m.bias.data, 0.0)
 
 
+
+
+
 def weights_init_classifier(m):
     classname = m.__class__.__name__
     if classname.find('Linear') != -1:
@@ -29,6 +34,102 @@ def weights_init_classifier(m):
 
 
 
+
+    
+class ft_net_intra_resnet50(nn.Module):
+    def __init__(self, num_classes, stride=1, init_weight=0.1):
+        super(ft_net_intra_resnet50, self).__init__()
+        # model_ft = TNormResNet(domain_number=len(num_classes),
+        #                        last_stride=stride,
+        #                        layers=[3, 4, 6, 3],
+        #                        init_weight=init_weight)
+        
+        model_ft=ResNet( last_stride=2,
+                 
+                 layers=[3, 4, 6, 3],
+                 init_weight=0.1)
+
+        self.model = model_ft
+        self.classifier = nn.ModuleList([
+            nn.Sequential(nn.BatchNorm1d(2048), nn.Linear(2048,
+                                                          num,
+                                                          bias=False))
+            for num in num_classes
+        ])
+        for classifier_one in self.classifier:
+            init.normal_(classifier_one[1].weight.data, std=0.001)
+            init.constant_(classifier_one[0].weight.data, 1.0)
+            init.constant_(classifier_one[0].bias.data, 0.0)
+            classifier_one[0].bias.requires_grad_(False)
+
+    def backbone_forward(self, x):
+        x = self.model(x)
+        return x
+
+    def forward(self, x, k=0):
+        x = self.backbone_forward(x)
+        x = x.view(x.size(0), x.size(1))
+        x = self.classifier[k](x)
+        return x#the classification scores and the dimension of it is the numberof classes in kth classifier
+
+
+
+class ft_net_inter_resnet50(nn.Module):
+    def __init__(self, num_classes, domain_number, stride=1, init_weight=0.1):
+        super(ft_net_inter_resnet50, self).__init__()
+        # domain number only for param initialization has no meaning
+        # model_ft = TNormResNet(domain_number,
+        #                        last_stride=stride,
+        #                        layers=[3, 4, 6, 3],
+        #                        init_weight=init_weight
+        #                        )
+        
+        
+        
+        model_ft=ResNet( last_stride=2,
+                 
+                 layers=[3, 4, 6, 3],
+                 init_weight=0.1)
+        
+        
+
+        self.model = model_ft
+        self.classifier = nn.Sequential(
+            nn.BatchNorm1d(2048), nn.Linear(2048, num_classes, bias=False))
+        init.normal_(self.classifier[1].weight.data, std=0.001)
+        init.constant_(self.classifier[0].weight.data, 1.0)
+        init.constant_(self.classifier[0].bias.data, 0.0)
+        self.classifier[0].bias.requires_grad_(False)
+
+    def backbone_forward(self, x):
+        x = self.model(x)
+        return x
+
+    def forward(self, x):
+        x = self.backbone_forward(x)
+        x = x.view(x.size(0), x.size(1))
+        prob = self.classifier(x)
+        return prob, x#x is the input of classifier and prob is the output of classifier
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 class ft_net_intra_TNorm(nn.Module):
     def __init__(self, num_classes, stride=1, init_weight=0.1):
         super(ft_net_intra_TNorm, self).__init__()
@@ -60,6 +161,9 @@ class ft_net_intra_TNorm(nn.Module):
         x = self.classifier[k](x)
         return x#the classification scores and the dimension of it is the numberof classes in kth classifier
 
+
+
+
 class ft_net_inter_TNorm(nn.Module):
     def __init__(self, num_classes, domain_number, stride=1, init_weight=0.1):
         super(ft_net_inter_TNorm, self).__init__()
@@ -86,7 +190,9 @@ class ft_net_inter_TNorm(nn.Module):
         x = self.backbone_forward(x, domain_index=domain_index, convert=convert)
         x = x.view(x.size(0), x.size(1))
         prob = self.classifier(x)
-        return prob, x
+        return prob, x#x is the input of classifier and prob is the output of classifier
+
+
 
 
 class ft_net_intra(nn.Module):

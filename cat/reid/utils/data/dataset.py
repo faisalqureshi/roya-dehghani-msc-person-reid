@@ -172,10 +172,10 @@ class Dataset(object):
         #gallery_ids=[ 1,3,4,5,416,959, 1208,1209,567, 568, 574,  692, 693]
         
         #added by roya to create a subset
-        query_ids=[ 1,3]
-        gallery_ids=[ 1,3,4,5]
-        self.split['query']=query_ids
-        self.split['gallery']=gallery_ids
+        # query_ids=[ 1,3]
+        # gallery_ids=[ 1,3,4,5]
+        # self.split['query']=query_ids
+        # self.split['gallery']=gallery_ids
         
            
            

@@ -117,7 +117,7 @@ class AIBNBottleneck(nn.Module):
         if adaptive_weight is None:
             self.adaptive_weight = nn.Parameter(torch.ones(1) * init_weight)
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
-        self.bn1 = AIBNorm2d(planes,
+        self.bn1 = AIBNorm2d(planes,#use AIBN normalizaton
                              adaptive_weight=self.adaptive_weight,
                              generate_weight=generate_weight)
         self.conv2 = nn.Conv2d(planes,
@@ -126,12 +126,12 @@ class AIBNBottleneck(nn.Module):
                                stride=stride,
                                padding=1,
                                bias=False)
-        self.bn2 = AIBNorm2d(planes,
+        self.bn2 = AIBNorm2d(planes,#use AIBN normalizaton
                              adaptive_weight=self.adaptive_weight,
                              generate_weight=generate_weight)
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
 
-        self.bn3 = AIBNorm2d(planes * 4,
+        self.bn3 = AIBNorm2d(planes * 4,#use AIBN normalizaton
                              adaptive_weight=self.adaptive_weight,
                              generate_weight=generate_weight)
         self.relu = nn.ReLU(inplace=True)
@@ -334,22 +334,22 @@ class TNormResNet(nn.Module):
         self.relu = nn.ReLU(inplace=True)  # add missed relu
         self.relu_after_tnorm = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer_normal(Bottleneck, 64, layers[0])
-        self.tnorm1 = TNorm(256, domain_number)
-        self.layer2 = self._make_layer_normal(Bottleneck,
+        self.layer1 = self._make_layer_normal(Bottleneck, 64, layers[0])#use Bottleneck
+        self.tnorm1 = TNorm(256, domain_number)#tnorm
+        self.layer2 = self._make_layer_normal(Bottleneck,#use Bottleneck
                                               128,
                                               layers[1],
                                               stride=2)
-        self.tnorm2 = TNorm(512, domain_number)
-        self.layer3 = self._make_layer(block,
+        self.tnorm2 = TNorm(512, domain_number)#tnorm
+        self.layer3 = self._make_layer(block,##use AIBNBottleneck
                                        256,
                                        layers[2],
                                        stride=2,
                                        adaptive_weight=None,
                                        init_weight=init_weight)
 
-        self.tnorm3 = TNorm(1024, domain_number)
-        self.layer4 = self._make_layer(block,
+        self.tnorm3 = TNorm(1024, domain_number)#tnorm
+        self.layer4 = self._make_layer(block,#use AIBNBottleneck
                                        512,
                                        layers[3],
                                        stride=last_stride,
@@ -458,11 +458,21 @@ class TNormResNet(nn.Module):
             if k in self.state_dict().keys():
                 self.state_dict()[k].copy_(v)
 
-    def random_init(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
+
+
+
+
+
+
+
+
+    # def random_init(self):
+    #     for m in self.modules():
+    #         if isinstance(m, nn.Conv2d):
+    #             n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+    #             m.weight.data.normal_(0, math.sqrt(2. / n))
+    #         elif isinstance(m, nn.BatchNorm2d):
+    #             m.weight.data.fill_(1)
+    #             m.bias.data.zero_()
+
+

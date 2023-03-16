@@ -1,2 +1,2 @@
 export PYTHONPATH=$PYTHONPATH:./
-python /home/roya/foo/Person_ReIdentification/cat/iids_tnorm_self_kd.py --dataset market1501 --checkpoint /home/roya/foo/Person_ReIdentification/iids/pretrained_weights/resnet50-0676ba61.pth
+python iids_tnorm_self_kd.py      --data-dir   ../iids/example/data         --dataset market1501 --checkpoint pretrained_weights/resnet50-0676ba61.pth

@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import
 from collections import OrderedDict
 import torch
 import torch.nn.functional as F
-from reid.feature_extraction import extract_cnn_feature, extract_cnn_feature_with_tnorm
+from reid.feature_extraction import extract_cnn_feature, extract_cnn_feature_with_tnorm,extract_cnn_feature_without_tnorm
 from tqdm import tqdm
 from sklearn.cluster import AgglomerativeClustering
 import numpy as np
@@ -97,7 +97,6 @@ def extract_features_per_cam(model, data_loader, norm=True):
         #train_pd.to_csv('/home/roya/IIDS/example/per_cam_features_norm.csv')
         return per_cam_features_norm, per_cam_features_without, per_cam_fname
 
-
 def extract_features_cross_cam(model, data_loader, norm=True, bn_neck=False):
     model.eval()
     cross_cam_features = []
@@ -144,6 +143,49 @@ def extract_features_cross_cam(model, data_loader, norm=True, bn_neck=False):
         return cross_cam_features, cross_cam_features_without, cross_cam_fnames, cross_cam_distribute, cams
 
 
+
+
+
+#here##############################################################################
+def extract_features_cross_cam_without_tnorm(model, data_loader):
+    model.eval()
+    cross_cam_features = []
+    cross_cam_fnames = []
+    cross_cam_distribute = []
+    cams = []
+    cam_number = len(model.classifier)
+    print("Start extract features cross camera")
+    for imgs, fnames, _, camid in tqdm(data_loader):
+
+        with torch.no_grad():
+            for i in range(cam_number):
+                
+                t = extract_cnn_feature_without_tnorm(model,
+                                                   imgs,
+                                                   camid,
+                                                   i,
+                                                   norm=False)
+                if i == 0:
+                    tmp = t
+                else:
+                    tmp = tmp + t
+                x = model.classifier[i](t)
+                if i == 0:
+                    distribute = F.softmax(x.data, dim=1)
+                else:
+                    distribute_tmp = F.softmax(x.data, dim=1)
+                    distribute = torch.cat((distribute, distribute_tmp), dim=1)
+            norm_outputs = F.normalize(tmp, p=2, dim=1)
+
+        for fname, output, cam, dis in zip(fnames, norm_outputs, camid,
+                                           distribute):
+            cam = cam.item()
+            cross_cam_fnames.append(fname)
+            cross_cam_features.append(output)
+            cams.append(cam)
+            cross_cam_distribute.append(dis.cpu().numpy())
+    return cross_cam_features, cross_cam_fnames, cross_cam_distribute, cams
+
 def extract_features_cross_cam_with_tnorm(model, data_loader):
     model.eval()
     cross_cam_features = []
@@ -182,7 +224,6 @@ def extract_features_cross_cam_with_tnorm(model, data_loader):
             cross_cam_distribute.append(dis.cpu().numpy())
     return cross_cam_features, cross_cam_fnames, cross_cam_distribute, cams
 
-
 def jaccard_sim_cross_cam(cross_cam_distribute):
     print(
         "Start calculate jaccard similarity cross camera, this step may cost a lot of time"
@@ -197,7 +238,6 @@ def jaccard_sim_cross_cam(cross_cam_distribute):
         union = (sum_distribute + abs_sub).sum(dim=1) / 2
         jaccard_sim[i, :] = intersection / union
     return to_numpy(jaccard_sim)
-
 
 def cluster_cross_cam(cross_cam_dist,
                       cross_cam_fname,
@@ -248,7 +288,6 @@ def cluster_cross_cam(cross_cam_dist,
             relabel += 1
     return cluster_results
 
-
 def distance_cross_cam(features, use_cpu=False):
     print("Start calculate pairwise distance cross camera")
     n = len(features)
@@ -273,7 +312,6 @@ def distane_per_cam(per_cam_features):
 
         per_cam_dist[k] = 1 - torch.mm(x, x.t())
     return per_cam_dist
-
 
 def cluster_per_cam(per_cam_dist, per_cam_fname, eph, linkage="average", n_clusters=None):
     cluster_results = {}
@@ -302,6 +340,9 @@ def cluster_per_cam(per_cam_dist, per_cam_fname, eph, linkage="average", n_clust
         else:
             eps = None
 
+
+    #Samples whose pairwise distances are above eps are considered 
+    # to be "outliers" and are not included in any cluster.
         Ag = AgglomerativeClustering(n_clusters=n_clusters,
                                      affinity="precomputed",
                                      linkage=linkage,
@@ -327,7 +368,6 @@ def cluster_per_cam(per_cam_dist, per_cam_fname, eph, linkage="average", n_clust
         #         cluster_results[k][fname] = label
     return cluster_results
 
-
 """this function does clustering based on cnn features"""
 def get_intra_cam_cluster_result(model, data_loader, eph, linkage, n_clusters=None):
     per_cam_features, per_cam_fname = extract_features_per_cam(
@@ -339,7 +379,6 @@ def get_intra_cam_cluster_result(model, data_loader, eph, linkage, n_clusters=No
                                       linkage, n_clusters=n_clusters)
     
     return cluster_results
-
 
 def get_inter_cam_cluster_result(model,
                                  data_loader,
@@ -371,7 +410,6 @@ def get_inter_cam_cluster_result(model,
     )
     return cluster_results
 
-
 def get_inter_cam_cluster_result_tnorm(model,
                                        data_loader,
                                        eph,
@@ -379,6 +417,34 @@ def get_inter_cam_cluster_result_tnorm(model,
                                        mix_rate=0.,
                                        use_cpu=False):
     features, fnames, cross_cam_distribute, cams = extract_features_cross_cam_with_tnorm(
+        model, data_loader)
+
+    cross_cam_distribute = torch.Tensor(np.array(cross_cam_distribute)).cuda()
+    cross_cam_dist = distance_cross_cam(features, use_cpu=use_cpu)
+
+    if mix_rate > 0:
+        jaccard_sim = jaccard_sim_cross_cam(cross_cam_distribute)
+    else:
+        jaccard_sim = None
+
+    cluster_results = cluster_cross_cam(
+        cross_cam_dist,
+        fnames,
+        eph,
+        linkage=linkage,
+        cams=cams,
+        mix_rate=mix_rate,
+        jaccard_sim=jaccard_sim,
+    )
+    return cluster_results
+
+def get_inter_cam_cluster_result_without_tnorm(model,
+                                       data_loader,
+                                       eph,
+                                       linkage,
+                                       mix_rate=0.,
+                                       use_cpu=False):
+    features, fnames, cross_cam_distribute, cams = extract_features_cross_cam_without_tnorm(
         model, data_loader)
 
     cross_cam_distribute = torch.Tensor(np.array(cross_cam_distribute)).cuda()
