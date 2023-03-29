@@ -15,3 +15,6 @@ python stage1-stage2.py      --data-dir    ../data/market1501       --dataset ma
 
 you can download the dataset from the following address:
 https://drive.google.com/drive/folders/199jfb9a1gJy9ZUpAGIpEJI6vKGEcNnBo?usp=sharing
+
+Branch fzq:
+in this branch, just I did some experiments and the results are shown in results.txt in stage1-stage2 branch. 
