@@ -3,6 +3,7 @@ import math
 import torch
 from torch import nn
 import numpy as np
+import torch.utils.model_zoo as model_zoo
 
 
 
@@ -158,3 +159,18 @@ class ResNet(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
+
+
+
+model_urls = {
+    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
+}
+
+
+def resnet50():
+    
+    model=ResNet()
+    model.load_param('/home/roya/foo/Person_ReIdentification/cat/pretrained_weights/resnet50-0676ba61.pth')
+    # Load the state dict into the model
+    
+    print(model)

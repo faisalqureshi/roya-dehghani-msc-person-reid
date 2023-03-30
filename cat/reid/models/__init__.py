@@ -4,6 +4,8 @@ from .ft_net import ft_net_inter, \
                     ft_net_intra, \
                     ft_net_intra_resnet50,\
                     ft_net_inter_resnet50,\
+                    ft_net_intra_convnext,\
+                    ft_net_inter_convnext,\
                     ft_net_inter_TNorm, \
                     ft_net_intra_TNorm, \
                     ft_net_both, \
@@ -16,13 +18,16 @@ __factory = {
     'ft_net_inter': ft_net_inter,
     'ft_net_intra': ft_net_intra,
     'ft_net_intra_resnet50':ft_net_intra_resnet50,
+    'ft_net_intra_convnext':ft_net_intra_convnext,
     'ft_net_intra_TNorm': ft_net_intra_TNorm,
     'ft_net_inter_TNorm': ft_net_inter_TNorm,
     'ft_net_inter_resnet50':ft_net_inter_resnet50,
+    'ft_net_inter_convnext':ft_net_inter_convnext,
     'ft_net_both': ft_net_both,
     'ft_net_inter_specific': ft_net_inter_specific,
     'ft_net_intra_specific': ft_net_intra_specific,
     'ft_net_test': ft_net_test
+    
    
 }
 
