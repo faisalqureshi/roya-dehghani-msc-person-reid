@@ -1,0 +1,5 @@
+LayerNorm is a PyTorch module that implements layer normalization. It supports two data formats, "channels_last" and "channels_first", which correspond to inputs with shape (batch_size, height, width, channels) and (batch_size, channels, height, width), respectively.
+
+In the constructor, normalized_shape specifies the shape of the input tensor to be normalized, eps is a small value added to the denominator to avoid division by zero, and data_format specifies the data format of the input tensor.
+
+The forward method performs the layer normalization operation based on the data format. If the data format is "channels_last", it uses the F.layer_norm function provided by PyTorch to normalize the input tensor. If the data format is "channels_first", it calculates the mean and standard deviation of each channel of the input tensor, normalizes the tensor using these statistics, and applies a learned scale and shift to the normalized tensor.

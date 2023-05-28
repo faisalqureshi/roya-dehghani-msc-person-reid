@@ -1,0 +1,83 @@
+﻿
+original model on smaller datasets:
+ subset   | # ids | # images
+  ---------------------------
+  train    |    11 |      204
+  val      |     4 |       38
+  trainval |    15 |      242
+  query    |     2 |       11
+  gallery  |     4 |      133
+
+Mean AP: 35.3%
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 11/11 [00:00<00:00, 25504.34it/s]
+CMC Scores  market1501
+  top-1          54.5%
+  top-5          90.9%
+  top-10        100.0%
+Tnorm: Rank1: 0.5454545454545454 mAP: 0.35317385415070063        Normal: Rank1: 0.5454545454545454 mAP: 0.3531898063205606
+
+______________________________________________________________________________________________________
+Model: ResNet without AIBN and Tnorm
+Market1501 dataset loaded
+  subset   | # ids | # images
+  ---------------------------
+  train    |   526 |     9127
+  val      |   225 |     3809
+  trainval |   751 |    12936
+  query    |   750 |     3368
+  gallery  |   751 |    15913
+
+
+setting                                           Market1501
+                                                  mAP/Rank1
+--------------------------------------------------------------------------------------
+pretrain ResNet:                                     
+                                    
+
+
+stage1+stage2: remove AIBN and TNorm layers from ResNet50                                 
+Mean AP: 47.9%
+CMC Scores 
+  top-1          70.8%
+  top-5          86.2%
+  top-10         90.4%
+                                   
+
+______________________________________________________________________________________________________
+model: Small Convnext
+Market1501 dataset loaded
+  subset   | # ids | # images
+  ---------------------------
+  train    |   526 |     9127
+  val      |   225 |     3809
+  trainval |   751 |    12936
+  query    |   750 |     3368
+  gallery  |   751 |    15913
+
+Mean AP: 72.4%
+CMC Scores  market1501
+  top-1          87.2%
+  top-5          94.2%
+  top-10         96.2%
+Tnorm: Rank1: 0.8723277909738717 mAP: 0.7244381390674223	 Normal: Rank1: 0.8723277909738717 mAP: 0.724438148078811
+
+------------------------------------------------
+pretrain Convnext:
+Mean AP: 5.7%
+CMC Scores  market1501
+  top-1          16.5%
+  top-5          28.8%
+  top-10         36.0%
+
+
+
+
+
+
+
+
+
+
+
+
+
