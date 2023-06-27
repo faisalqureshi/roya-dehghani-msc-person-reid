@@ -1,20 +1,45 @@
-# Person_ReIdentification
+# Unsupervised Person ReID
+Inspired by other works in unsupervised pseudo labels, we designed a two-stage system for person ReID tasks across different cameras. The task of matching and recognizing persons across multiple camera views or datasets without labeled training data is called unsupervised person re-identification (ReID). Unsupervised person ReID, in contrast to supervised person ReID, which uses annotated data with identification labels for training, tries to develop effective representations exclusively from unannotated data.
 
-The original model:
-First of all, plaese install all packages(Python==3.7.5, Pytorch==1.3.1, Cuda==9.2). To test the model, please run one of the scripts in script folder based on your dataset. 
-the main file is iids_tnorm_self_kd.py in example folder. 
-to install the required packages, you can use the following lines:
-after creating an env in conda,
-conda install pytorch==1.6.0 torchvision==0.7.0 cudatoolkit=9.2 -c pytorch
-just you need to install numpy and other main packages in requienment.txt, not the whole packages. 
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contact](#Contact)
+- [Acknowledgement](#Acknowledgement)
 
 
-Resnet after removing other techniques:
-In stage1-stage2 branch, we have a reid model that i removed AIBN and TNorm techniques from backbone and run the model on the whole dataset. In order to train this model, you should run the train-market.sh in script folder in this branch. Plesea note that you should set your dataset path as the argument of --data-dir in thi train-market.sh. like this example:
-python stage1-stage2.py      --data-dir    ../data/market1501       --dataset market1501 --checkpoint pretrained_weights/resnet50-0676ba61.pth
+## Introduction
+Unsupervised person ReID addresses the challenge of matching individuals across camera viewpoints by learning robust and invariant feature representations.
 
-you can download the dataset from the following address:
-https://drive.google.com/drive/folders/199jfb9a1gJy9ZUpAGIpEJI6vKGEcNnBo?usp=sharing
+## Installation
+- Install Anaconda and create an environment
+- Activate your environment
+- Install packages written in requirenment.txt
 
-Branch fzq:
-in this branch, just I did some experiments and the results are shown in results.txt in stage1-stage2 branch. 
+## Usage
+1. Prepare dataset<br>
+   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Download Market1501and  DukeMTMC-ReID from a website and put the zip file under the directory like
+
+ - `./data`
+    - `dukemtmc`
+        - `raw`
+            - `DukeMTMC-reID.zip`
+    - `market1501`
+        - `raw`
+            - `Market-1501-v15.09.15.zip`
+
+
+2. Train Model<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;You need to  run the train_market.sh in scripts folder
+3. Download trained model<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; You can download pre-trained weight of Market1501 from [Pretrained_checkpoint_Market1501](https://drive.google.com/file/d/1uTxz8_ozIM7qbL3p3As1upmqJ1jctWXA/view?usp=drive_link)
+4. Evaluate Model<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;change the checkpoint path in the test_market.sh in scripts folder and set the trained model.
+
+## Contact
+If you have any questions about this code or paper, feel free to contact me at [royadehghani1@gmail.com](royadehghani1@gmail.com)
+
+## Acknowledgement
+Codes are built upon [Open-reid](https://github.com/Cysu/open-reid)
